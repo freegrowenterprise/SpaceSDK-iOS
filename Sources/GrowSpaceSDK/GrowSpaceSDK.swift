@@ -13,8 +13,9 @@ public class GrowSpaceSDK {
     public init() {}
 
     public func startSearchGrowSpaceBeacon() {
+        print("startSearchGrowSpaceBeacon 실행")
         scanner = BLEScanner { peripheral, rssi in
-            print("🔹 발견된 기기: \(peripheral.name ?? "알 수 없음"), RSSI: \(rssi)")
+            print("발견된 기기: \(peripheral.name ?? "알 수 없음"), RSSI: \(rssi)")
         }
     }
 }
