@@ -14,9 +14,9 @@ public class GrowSpaceSDK {
 
     public func startSearchGrowSpaceBeacon() {
         print("startSearchGrowSpaceBeacon 실행")
-        if scanner == nil { // scanner가 유지되도록 변경
-            scanner = BLEScanner { peripheral, rssi in
-                print("발견된 기기: \(peripheral.name ?? "알 수 없음"), RSSI: \(rssi)")
+        if scanner == nil {
+            scanner = BLEScanner { peripheral, rssi, macAddress in
+                print("🔹 발견된 기기: \(peripheral.name ?? "알 수 없음"), RSSI: \(rssi), MAC 주소: \(macAddress ?? "없음")")
             }
         }
     }
