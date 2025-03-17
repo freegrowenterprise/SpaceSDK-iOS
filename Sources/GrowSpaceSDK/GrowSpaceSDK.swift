@@ -6,6 +6,7 @@
 //
 
 import CoreBluetooth
+
 import GrowSpacePrivateSDK
 
 public class GrowSpaceSDK {
@@ -24,10 +25,9 @@ public class GrowSpaceSDK {
     public func startSearchGrowSpaceBeacon(onDiscoverDevices: @escaping (String, Int) -> Void) {
         print("startSearchGrowSpaceBeacon 실행")
         if scanner == nil {
-            scanner = SpaceBeaconScanner(apiKey: self.apiKey) { macAddress, rssi in
-                print("MacAddress : \(macAddress), RSSI : \(rssi)")
-                onDiscoverDevices(macAddress, rssi)
-            }
+            scanner = SpaceBeaconScanner()
+            
+            scanner?.startScanning(onDeviceDiscovered: onDiscoverDevices)
         }
     }
     

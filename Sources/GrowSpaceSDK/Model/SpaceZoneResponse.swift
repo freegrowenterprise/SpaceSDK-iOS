@@ -1,12 +1,12 @@
+////
+////  SpaceZoneResponse.swift
+////  GrowSpaceSDKTestApp
+////
+////  Created by min gwan choi on 3/14/25.
+////
 //
-//  SpaceZoneResponse.swift
-//  GrowSpaceSDKTestApp
+//import Foundation
 //
-//  Created by min gwan choi on 3/14/25.
-//
-
-import Foundation
-
-public struct SpaceZoneResponse: Decodable {
-    let zoneName: String
-}
+//public struct SpaceZoneResponse: Decodable {
+//    let zoneName: String
+//}
