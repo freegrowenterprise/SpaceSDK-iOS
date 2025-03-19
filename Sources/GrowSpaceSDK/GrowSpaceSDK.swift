@@ -13,19 +13,17 @@ public class GrowSpaceSDK {
     private let apiKey: String
     
     private var scanner: SpaceBeaconScanner?
-    private var network: SpaceNetwork
     
     public init(apiKey: String) {
         self.apiKey = apiKey
-        self.network = SpaceNetwork(
-            apiKey: apiKey
-        )
     }
     
-    public func startSearchGrowSpaceBeacon(onDiscoverDevices: @escaping (String, Int) -> Void) {
+    public func startSearchGrowSpaceBeacon(onDiscoverDevices: @escaping (SpaceZoneResponse?) -> Void) {
         print("startSearchGrowSpaceBeacon 실행")
         if scanner == nil {
-            scanner = SpaceBeaconScanner()
+            scanner = SpaceBeaconScanner(
+                apiKey: self.apiKey
+            )
             
             scanner?.startScanning(onDeviceDiscovered: onDiscoverDevices)
         }
@@ -37,9 +35,5 @@ public class GrowSpaceSDK {
             scanner.stopScanning()
             self.scanner = nil
         }
-    }
-    
-    public func spaceBeaconLocation(macAddress: String) async -> SpaceZoneResponse? {
-        return await self.network.sendGetRequestToServer(macAddress: macAddress)
     }
 }
