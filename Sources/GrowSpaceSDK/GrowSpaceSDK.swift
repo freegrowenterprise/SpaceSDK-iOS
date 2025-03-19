@@ -18,7 +18,7 @@ public class GrowSpaceSDK {
         self.apiKey = apiKey
     }
     
-    public func startSearchGrowSpaceBeacon(onDiscoverDevices: @escaping (SpaceZoneResponse?) -> Void) {
+    public func startSearchGrowSpaceBeacon(onDiscoverDevices: @escaping (Result<SpaceZoneResponse?, Error>) -> Void) {
         print("startSearchGrowSpaceBeacon 실행")
         if scanner == nil {
             scanner = SpaceBeaconScanner(
