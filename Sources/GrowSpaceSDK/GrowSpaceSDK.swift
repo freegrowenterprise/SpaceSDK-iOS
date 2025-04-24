@@ -39,9 +39,9 @@ public class GrowSpaceSDK {
     }
     
     public func startUWBRanging(
-        maximumConnectionCount: Int,
-        replacementDistanceThreshold: Float,
-        isConnectStrongestSignalFirst: Bool,
+        maximumConnectionCount: Int = 4,
+        replacementDistanceThreshold: Float = 8,
+        isConnectStrongestSignalFirst: Bool = true,
         onUpdate: @escaping (UWBResult) -> Void,
         onDisconnect: @escaping (UWBDisconnect) -> Void
     ) {
