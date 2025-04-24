@@ -39,10 +39,16 @@ public class GrowSpaceSDK {
     }
     
     public func startUWBRanging(
+        maximumConnectionCount: Int,
+        replacementDistanceThreshold: Float,
+        isConnectStrongestSignalFirst: Bool,
         onUpdate: @escaping (UWBResult) -> Void,
         onDisconnect: @escaping (UWBDisconnect) -> Void
     ) {
-        uwbScanner.start()
+        uwbScanner.startUwbRanging(
+            maximumConnectionCount: maximumConnectionCount,
+            replacementDistanceThreshold: replacementDistanceThreshold,
+            isConnectStrongestSignalFirst: isConnectStrongestSignalFirst)
         
         uwbScanner.spaceUWBHandler = {
             onUpdate($0)
