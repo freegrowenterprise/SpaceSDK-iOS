@@ -38,22 +38,27 @@ public class GrowSpaceSDK {
         }
     }
     
-    public func startUWBRanging() {
+    public func startUWBRanging(
+        onUpdate: @escaping (UWBResult) -> Void,
+        onDisconnect: @escaping (UWBDisconnect) -> Void
+    ) {
         uwbScanner.start()
         
         uwbScanner.spaceUWBHandler = {
-            DebugLogger.debug("device Name : \($0.deviceName) distance : \($0.distance) azimuth : \($0.azimuth) elevation : \($0.elevation)")
+            onUpdate($0)
         }
         
         uwbScanner.spcaeUWBDisconnectHandler = {
-            switch $0.disConnectType {
-            case .deviceRemoved:
-                DebugLogger.debug("deviceRemoved")
-            case .disconnectedDueToDistance:
-                DebugLogger.debug("disconnectedDueToDistance")
-            default:
-                break
-            }
+            onDisconnect($0)
+        }
+    }
+    
+    public func stopUWBRanging(onComplete: @escaping (Result<Void, Error>) -> Void) {
+        do {
+            try uwbScanner.stop()
+            onComplete(.success(()))
+        } catch {
+            onComplete(.failure(error))
         }
     }
 }
