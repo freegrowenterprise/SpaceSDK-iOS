@@ -11,6 +11,10 @@ import Foundation
 
 public class GrowSpaceRTLS {
     private var spaceRTLS: SpaceRTLS?
+    
+    public init(spaceRTLS: SpaceRTLS? = nil) {
+        self.spaceRTLS = spaceRTLS
+    }
 
     public func startUwbRtls(
         anchors: [RTLSAnchorResult],
