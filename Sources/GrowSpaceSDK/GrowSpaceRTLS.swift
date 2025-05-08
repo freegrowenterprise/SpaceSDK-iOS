@@ -38,14 +38,9 @@ public class GrowSpaceRTLS {
             guard let location = spaceRTLS?.calculateLocation(
                 anchors: privateAnchors,
                 zCorrection: zCorrection
-            ) else {
-                print("location null")
-                return
-            }
+            ) else { return }
 
             let result = TagLocationResult(from: location)
-            
-            print("location result = \(result)")
 
             DispatchQueue.main.async {
                 onResult(result)
