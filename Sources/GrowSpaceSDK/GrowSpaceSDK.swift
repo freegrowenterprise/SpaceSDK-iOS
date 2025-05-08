@@ -42,8 +42,8 @@ public class GrowSpaceSDK {
         maximumConnectionCount: Int = 4,
         replacementDistanceThreshold: Float = 8,
         isConnectStrongestSignalFirst: Bool = true,
-        onUpdate: @escaping (UWBResult) -> Void,
-        onDisconnect: @escaping (UWBDisconnect) -> Void
+        onUpdate: @escaping (UWBRangeResult) -> Void,
+        onDisconnect: @escaping (DisconnectTypeResult) -> Void
     ) {
         uwbScanner.startUwbRanging(
             maximumConnectionCount: maximumConnectionCount,
@@ -51,11 +51,11 @@ public class GrowSpaceSDK {
             isConnectStrongestSignalFirst: isConnectStrongestSignalFirst)
         
         uwbScanner.spaceUWBHandler = {
-            onUpdate($0)
+            onUpdate(self.changeUWBResultToUWBRangeResult($0))
         }
         
         uwbScanner.spcaeUWBDisconnectHandler = {
-            onDisconnect($0)
+            onDisconnect(self.convertDisconnectType($0))
         }
     }
     
@@ -65,6 +65,31 @@ public class GrowSpaceSDK {
             onComplete(.success(()))
         } catch {
             onComplete(.failure(error))
+        }
+    }
+    
+    public func startUWBRTLS(
+        onResult: @escaping (UWBRangeResult) -> Void
+    ) {
+        
+    }
+    
+    private func changeUWBResultToUWBRangeResult(_ uwbResult: UWBResult) -> UWBRangeResult {
+        return UWBRangeResult(deviceName: uwbResult.deviceName,
+                              distance: uwbResult.distance,
+                              direction: uwbResult.direction,
+                              azimuth: uwbResult.azimuth,
+                              elevation: uwbResult.elevation)
+    }
+    
+    func convertDisconnectType(_ type: GrowSpacePrivateSDK.UWBDisconnect) -> DisconnectTypeResult {
+        switch type.disConnectType {
+        case .disconnectedDueToDistance:
+            return .disconnectedDueToDistance
+        case .disconnectedDueToSystem:
+            return .disconnectedDueToSystem
+        default:
+            return .disconnectedDueToSystem
         }
     }
 }
