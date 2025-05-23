@@ -12,6 +12,8 @@ import GrowSpacePrivateSDK
 public class GrowSpaceSDK {
     private var uwbScanner: SpaceUWB = SpaceUWB()
     
+    public init() {}
+    
     public func startUWBRanging(
         maximumConnectionCount: Int = 4,
         replacementDistanceThreshold: Float = 8,
