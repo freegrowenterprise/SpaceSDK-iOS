@@ -1,66 +1,67 @@
 # 📡 SpaceSDK-iOS
 
-**SpaceSDK**는 FREEGROW Inc.의 UWB 기반 iOS SDK로 거리 측정, 방향 계산, RTLS 실시간 위치 추정 기능을 제공합니다.  
-SDK 사용자는 단일 클래스 `GrowSpaceSDK`를 통해 복잡한 연결 흐름 없이 UWB 기능을 간편하게 활용할 수 있습니다.
+**SpaceSDK** is a UWB-based iOS SDK developed by **FREEGROW Inc.**, providing features such as distance measurement, direction detection, and real-time RTLS (location estimation).  
+With a single class `GrowSpaceSDK`, developers can easily access UWB capabilities without dealing with low-level complexities.
+
 
 ---
 
-## 📦 설치 방법
+## 📦 Installation
 
-**Swift Package Manager(SPM)** 를 통한 설치
+Install via **Swift Package Manager (SPM)**:
 
-1. Xcode → File → Add Packages
-2. 입력:
+1. In Xcode: `File → Add Packages`
+2. Enter:
 ```
 https://github.com/freegrowenterprise/SpaceSDK-iOS
 ```
 
 ---
 
-## ✅ 주요 기능
-- BLE + UWB 기반 거리 측정 (Ranging)
-- RTLS 기반 위치 추정 (x, y, z 계산)
-- 실시간 디바이스 연결/해제 콜백
+## ✅ Key Features
+- BLE + UWB-based distance measurement (Ranging)
+- RTLS-based real-time location estimation (x, y, z)
+- Real-time device connection and disconnection callbacks
 
 ---
 
-## 🔧 요구 사항
+## 🔧 Requirements
 
 ### Software
-- iOS 16.0 이상
-- Xcode 14 이상
-- Swift 5.7 이상
+- iOS 16.0 or later  
+- Xcode 14 or later  
+- Swift 5.7 or later
 
 ### Hardware
-- [UWB 지원 iOS 휴대폰](https://blog.naver.com/growdevelopers/223775171523)
-- 실제 UWB 디바이스 [(Grow Space UWB 제품)](https://grow-space.io/product/n1-mk-01/)
+- [UWB-supported iPhone](https://blog.naver.com/growdevelopers/223775171523)  
+- Physical UWB device [(Grow Space UWB product)](https://grow-space.io/product/n1-mk-01/)
 
 ---
 
-## 📑 Info.plist 권한 설정
+## 📑 Info.plist Permissions
 ```xml
 <key>NSBluetoothAlwaysUsageDescription</key>
-<string>이 앱은 UWB 장치와 BLE 통신을 위해 Bluetooth 권한이 필요합니다.</string>
+<string>This app requires Bluetooth access for communication with UWB devices via BLE.</string>
 
 <key>NSLocationWhenInUseUsageDescription</key>
-<string>이 앱은 BLE 기반 장치 검색 및 연결을 위해 위치 권한이 필요합니다.</string>
+<string>This app requires location access to discover and connect BLE-based devices.</string>
 
 <key>NSNearbyInteractionUsageDescription</key>
-<string>이 앱은 근거리 상호작용을 위해 UWB 기능을 사용합니다.</string>
+<string>This app uses the UWB feature for nearby interaction.</string>
 
 <key>NSCameraUsageDescription</key>
-<string>UWB 장치와의 거리, 방향 정확도를 높이기 위해 카메라 접근이 필요합니다.</string>
+<string>Camera access is required to improve the accuracy of distance and direction measurements.</string>
 
 <key>NSMotionUsageDescription</key>
-<string>정확한 위치 계산을 위해 모션 센서 접근이 필요합니다.</string>
+<string>Motion sensor access is required for precise location calculation.</string>
 
 <key>NSBluetoothPeripheralUsageDescription</key>
-<string>UWB 장치와의 BLE 연결을 위해 이 권한이 필요합니다.</string>
+<string>This app requires BLE permission to connect to UWB devices.</string>
 ```
 
 ---
 
-## 🧱 초기화
+## 🧱 Initialization
 
 ```swift
 let growSpaceSDK = GrowSpaceSDK()
@@ -80,7 +81,7 @@ growSpaceSDK.startUWBRanging(
         let elevation = result.elevation
 
         DispatchQueue.main.async {
-            // 결과를 UI에 표시하는 로직
+            // Display result on UI
             updateDeviceUI(
                 name: name,
                 distance: distance,
@@ -103,7 +104,7 @@ growSpaceSDK.startUWBRanging(
 
 ```swift
 growSpaceSDK.stopUWBRanging {
-    print("✅ 거리 측정 종료")
+    print("✅ Ranging stopped")
 }
 ```
 
@@ -114,21 +115,21 @@ growSpaceSDK.stopUWBRanging {
 ```swift
 growSpaceSDK.startUWBRanging(
     onUpdate: { result in
-        // 거리 수신 결과 누적
+        // Store distance results
         anchorResults[result.deviceName] = result
 
-        // 앵커 ID와 위치 매핑 정보로 RTLS 계산
+        // Convert to anchor data with known coordinates
         let anchors = convertToAnchorResults(
             from: anchorResults,
             coordinates: anchorCoordinateMap
         )
 
-        // 실시간 RTLS 위치 추정
+        // RTLS location processing
         growSpaceRTLS.startUwbRtls(
             anchors: anchors,
             onResult: { location in
                 DispatchQueue.main.async {
-                    // 위치 결과를 화면 격자에 표시
+                    // Update user's position on grid
                     updateUserPositionOnGrid(CGPoint(x: location.x, y: location.y))
                 }
             }
@@ -139,26 +140,26 @@ growSpaceSDK.startUWBRanging(
 
 ---
 
-## 📱 테스트 앱 안내
+## 📱 Test App
 
-본 SDK를 활용한 공식 테스트 앱이 아래 경로에 공개되어 있습니다.
-실제 디바이스와 연동하여 UWB 거리 측정 및 RTLS 위치 추정 기능을 직접 체험할 수 있습니다.
+An official test app built using this SDK is available for public use.
+You can test UWB ranging and RTLS features with actual devices.
 
 - [GitHub](https://github.com/freegrowenterprise/SpaceSDK-iOS-TestApp)
 - [App Store](https://apps.apple.com/us/app/space-uwb/id6745208882)
 
  ---
 
-## 🏢 제작
+## 🏢 Developed by
 
 **FREEGROW Inc.**  
-실내 측위와 근거리 무선 통신 기술을 바탕으로 한 UWB 솔루션을 개발하고 있습니다.
+We specialize in UWB-based indoor positioning and wireless communication solutions.
 
 ---
 
-## 📫 문의
+## 📫 Contact
 
-기술 문의나 개선 제안은 아래 메일로 연락주세요.
+For technical support or feedback, please contact us:
 
 📮 contact@freegrow.io
 
