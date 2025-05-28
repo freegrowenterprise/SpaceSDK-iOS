@@ -69,7 +69,7 @@ let growSpaceSDK = GrowSpaceSDK()
 
 ---
 
-## 🚀 거리 측정 시작
+## 🚀 Start Ranging
 ```swift
 growSpaceSDK.startUWBRanging(
     maximumConnectionCount: 4,
@@ -100,7 +100,7 @@ growSpaceSDK.startUWBRanging(
 
 ---
 
-## 🛑 거리 측정 중지
+## 🛑 Stop Ranging
 
 ```swift
 growSpaceSDK.stopUWBRanging {
@@ -111,7 +111,7 @@ growSpaceSDK.stopUWBRanging {
 ---
 
 
-## 📍 RTLS 위치 추정
+## 📍 RTLS Location Estimation
 ```swift
 growSpaceSDK.startUWBRanging(
     onUpdate: { result in
