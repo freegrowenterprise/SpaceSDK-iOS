@@ -19,7 +19,7 @@ public class GrowSpaceSDK {
         replacementDistanceThreshold: Float = 8,
         isConnectStrongestSignalFirst: Bool = true,
         onUpdate: @escaping (UWBRangeResult) -> Void,
-        onDisconnect: @escaping (DisconnectTypeResult) -> Void
+        onDisconnect: @escaping (UWBDisconnectResult) -> Void
     ) {
         uwbScanner.startUwbRanging(
             maximumConnectionCount: maximumConnectionCount,
@@ -58,14 +58,17 @@ public class GrowSpaceSDK {
                               elevation: uwbResult.elevation)
     }
     
-    func convertDisconnectType(_ type: GrowSpacePrivateSDK.UWBDisconnect) -> DisconnectTypeResult {
+    func convertDisconnectType(_ type: GrowSpacePrivateSDK.UWBDisconnect) -> UWBDisconnectResult {
+        let disconnectType: DisconnectTypeResult
         switch type.disConnectType {
         case .disconnectedDueToDistance:
-            return .disconnectedDueToDistance
+            disconnectType = .disconnectedDueToDistance
         case .disconnectedDueToSystem:
-            return .disconnectedDueToSystem
+            disconnectType = .disconnectedDueToSystem
         default:
-            return .disconnectedDueToSystem
+            disconnectType = .disconnectedDueToSystem
         }
+        
+        return UWBDisconnectResult(disConnectType: disconnectType, deviceName: type.deviceName)
     }
 }
