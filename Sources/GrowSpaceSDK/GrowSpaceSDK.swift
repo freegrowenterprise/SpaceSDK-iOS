@@ -18,13 +18,15 @@ public class GrowSpaceSDK {
         maximumConnectionCount: Int = 4,
         replacementDistanceThreshold: Float = 8,
         isConnectStrongestSignalFirst: Bool = true,
+        uwbUpdateTimeoutSeconds: Int = 5,
         onUpdate: @escaping (UWBRangeResult) -> Void,
         onDisconnect: @escaping (UWBDisconnectResult) -> Void
     ) {
         uwbScanner.startUwbRanging(
             maximumConnectionCount: maximumConnectionCount,
             replacementDistanceThreshold: replacementDistanceThreshold,
-            isConnectStrongestSignalFirst: isConnectStrongestSignalFirst)
+            isConnectStrongestSignalFirst: isConnectStrongestSignalFirst,
+            uwbUpdateTimeoutSeconds: uwbUpdateTimeoutSeconds)
         
         uwbScanner.spaceUWBHandler = {
             onUpdate(self.changeUWBResultToUWBRangeResult($0))
