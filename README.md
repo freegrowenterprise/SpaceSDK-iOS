@@ -99,6 +99,13 @@ growSpaceSDK.startUWBRanging(
 )
 ```
 
+### Variable Description
+```
+maximumConnectionCount: 4,            // Maximum number of devices that can be connected simultaneously
+replacementDistanceThreshold: 8,      // Distance threshold (in meters). Devices exceeding this distance will be automatically disconnected
+uwbUpdateTimeoutSeconds: 5,           // Disconnect a device if no UWB value update is received within the specified number of seconds
+```
+
 ---
 
 ## 🛑 Stop Ranging
