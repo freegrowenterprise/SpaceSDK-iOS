@@ -74,6 +74,7 @@ let growSpaceSDK = GrowSpaceSDK()
 growSpaceSDK.startUWBRanging(
     maximumConnectionCount: 4,
     replacementDistanceThreshold: 8,
+    uwbUpdateTimeoutSeconds: 5,
     onUpdate: { result in
         let name = result.deviceName
         let distance = result.distance
