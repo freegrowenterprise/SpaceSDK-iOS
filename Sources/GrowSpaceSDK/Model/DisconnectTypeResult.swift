@@ -12,6 +12,7 @@ import GrowSpacePrivateSDK
 public enum DisconnectTypeResult {
     case disconnectedDueToDistance
     case disconnectedDueToSystem
+    case disconnectedDueToTimeout
 }
 
 public struct UWBDisconnectResult {
