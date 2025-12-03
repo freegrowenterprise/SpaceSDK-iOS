@@ -25,8 +25,8 @@ let package = Package(
 
         .binaryTarget(
             name: "GrowSpacePrivateSDK",
-            url: "https://github.com/freegrowenterprise/SpaceSDK-iOS/releases/download/v0.0.39/GrowSpacePrivateSDK.xcframework.zip",
-            checksum: "b67703ba5d88e5b9c4b9b55bba69b4ee6258c7f3f5feabdbb8c33667cfddbde1"
+            url: "https://github.com/freegrowenterprise/SpaceSDK-iOS/releases/download/v0.0.40/GrowSpacePrivateSDK.xcframework.zip",
+            checksum: "a9890a3e2e8930a2ea213c7235a82fd6ec0f541486462b9ccff602701ec149f7"
         ),
         .testTarget(
             name: "GrowSpaceSDKTests",
