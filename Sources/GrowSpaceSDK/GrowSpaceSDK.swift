@@ -15,7 +15,6 @@ public class GrowSpaceSDK {
     public init() {}
     
     public func startUWBRanging(
-        isEnableARWorldView: Bool = true,
         maximumConnectionCount: Int = 4,
         replacementDistanceThreshold: Float = 8,
         isConnectStrongestSignalFirst: Bool = true,
@@ -23,8 +22,6 @@ public class GrowSpaceSDK {
         onUpdate: @escaping (UWBRangeResult) -> Void,
         onDisconnect: @escaping (UWBDisconnectResult) -> Void
     ) {
-        uwbScanner.isEnableARWorldView = isEnableARWorldView
-        
         uwbScanner.startUwbRanging(
             maximumConnectionCount: maximumConnectionCount,
             replacementDistanceThreshold: replacementDistanceThreshold,
