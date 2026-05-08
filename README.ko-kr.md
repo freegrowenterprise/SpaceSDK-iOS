@@ -123,9 +123,19 @@ growSpaceSDK.stopUWBRanging {
 
 ## 🚫 단일 끊기 / 차단 목록
 
+`disconnectDevice` 와 `blockDevice` 는 이름이 비슷하지만 의미가 다르다. 사용자 의도에 맞게 골라 쓴다.
+
+| | `disconnectDevice(name)` | `blockDevice(name)` |
+|---|---|---|
+| 활성 BLE/UWB 연결 끊기 | ✅ | ✅ |
+| 스캐너 계속 동작 | ✅ | ✅ |
+| 같은 `GrowSpaceSDK` 인스턴스 동안 자동 재연결 차단 | ✅ | ✅ |
+| 영구 저장 (`UserDefaults`) | ❌ | ✅ |
+| 새 `GrowSpaceSDK` 인스턴스 / 새 화면에서 재연결 가능 | ✅ 가능 | ❌ `unblockDevice` 호출 전까지 불가 |
+| BLE 광고 단계에서 필터 | ❌ (인스턴스 세션 내) | ✅ (영구) |
+
 ```swift
-// 디바이스 1개만 끊기. 스캐너는 계속 동작. 같은 GrowSpaceSDK 인스턴스 안에선
-// 자동 재연결을 막지만, 새 인스턴스(예: 페이지 이탈 후 재진입)에선 다시 연결될 수 있다.
+// 한 번만 끊기 — 다시 연결될 가능성을 열어두는 UX.
 growSpaceSDK.disconnectDevice("FGU-1234")
 
 // 영구 차단. UserDefaults 에 저장되어 앱 재실행 후에도 유지.
@@ -138,6 +148,56 @@ if growSpaceSDK.isBlocked("FGU-1234") {
 }
 growSpaceSDK.clearBlockedDevices()
 ```
+
+---
+
+## 🔌 Disconnect 사유 분기
+
+`UWBDisconnectResult.disConnectType` 은 디바이스가 끊어진 이유를 알려준다. 각 케이스마다 적절한 UX 응답이 다르다.
+
+| 케이스 | 의미 | 권장 UX |
+|---|---|---|
+| `disconnectedDueToDistance` | `replacementDistanceThreshold` 초과 | "거리 너무 멀어서 끊김" |
+| `disconnectedDueToSystem` | BLE peer disconnect, NI 세션 invalid 등 | 일반 끊김 안내 |
+| `disconnectedDueToTimeout` | 데이터 받다가 임계 시간 동안 끊김 (STALE) | 신호 회복 시도 안내 |
+| `disconnectedDueToNoData` | 연결됐지만 UWB 데이터를 **한 번도** 못 받음 (NEVER\_RECEIVED — iOS 26 U2 EDM 회귀 가능성) | 재시도 권유 / timeout 늘려 보기 |
+
+```swift
+onDisconnect: { result in
+    switch result.disConnectType {
+    case .disconnectedDueToNoData:
+        // UWB 데이터가 한 번도 들어오지 않은 케이스. 재시도/장치 점검 안내.
+        showNoDataAlert(for: result.deviceName)
+    case .disconnectedDueToTimeout:
+        showTimeoutToast(for: result.deviceName)
+    case .disconnectedDueToDistance, .disconnectedDueToSystem:
+        showStandardDisconnectToast(for: result.deviceName)
+    @unknown default:
+        showStandardDisconnectToast(for: result.deviceName)
+    }
+}
+```
+
+---
+
+## ⚠️ 메모리 누수 — 핸들러는 반드시 `[weak self]` 로 캡처
+
+SDK 가 `startUWBRanging(onUpdate:onDisconnect:)` 에 넘긴 클로저를 강참조로 보관한다. 클로저 안에서 `self` 를 강하게 캡처하면 호출자(VC / VM) ↔ SDK 사이에 retain cycle 이 생겨 `deinit` 이 호출되지 않는다. 항상 약하게 잡아야 한다.
+
+```swift
+growSpaceSDK.startUWBRanging(
+    onUpdate: { [weak self] result in
+        guard let self else { return }
+        self.update(result)
+    },
+    onDisconnect: { [weak self] result in
+        guard let self else { return }
+        self.handleDisconnect(result)
+    }
+)
+```
+
+SDK 내부 `Timer` / 델리게이트는 모두 weak 로 처리되어 있어, retain cycle 위험은 호출자 코드 쪽에만 남는다.
 
 ---
 

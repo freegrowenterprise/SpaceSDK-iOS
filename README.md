@@ -139,13 +139,22 @@ growSpaceSDK.stopUWBRanging {
 
 ## 🚫 Disconnect a Single Device / Block List
 
+`disconnectDevice` and `blockDevice` look similar but mean different things. Pick the one that matches the user's intent.
+
+| | `disconnectDevice(name)` | `blockDevice(name)` |
+|---|---|---|
+| Drop the active BLE/UWB connection | ✅ | ✅ |
+| Scanner keeps running | ✅ | ✅ |
+| Suppress auto-reconnect within current `GrowSpaceSDK` instance | ✅ | ✅ |
+| Persisted to disk (`UserDefaults`) | ❌ | ✅ |
+| Reachable again from a fresh `GrowSpaceSDK` instance / new screen | ✅ Yes | ❌ Until `unblockDevice` |
+| Filtered out at BLE advertisement scan | ❌ (instance-scoped only) | ✅ (permanent) |
+
 ```swift
-// Disconnect just one device. Scanner keeps running. The same instance
-// will not auto-reconnect to this device, but a fresh GrowSpaceSDK
-// instance (for example after the user leaves and returns to the page) can.
+// Drop a single device but leave the door open for re-connection later.
 growSpaceSDK.disconnectDevice("FGU-1234")
 
-// Permanently block. Persists across app launches via UserDefaults.
+// Permanently block. Survives app relaunch via UserDefaults.
 growSpaceSDK.blockDevice("FGU-1234")
 
 // Inspect / lift the block list.
@@ -155,6 +164,57 @@ if growSpaceSDK.isBlocked("FGU-1234") {
 }
 growSpaceSDK.clearBlockedDevices()
 ```
+
+---
+
+## 🔌 Disconnect Reasons
+
+`UWBDisconnectResult.disConnectType` tells you why a device went away. Each case maps to a different UX response.
+
+| Case | Meaning | Typical UX |
+|---|---|---|
+| `disconnectedDueToDistance` | Device exceeded `replacementDistanceThreshold` | "Out of range" toast |
+| `disconnectedDueToSystem` | BLE peer disconnect, NI session invalidated, etc. | Generic "Disconnected" |
+| `disconnectedDueToTimeout` | UWB updates were arriving and then stopped (STALE) | Encourage user to retry / move closer |
+| `disconnectedDueToNoData` | Connected, but **never** produced a UWB update (NEVER\_RECEIVED — known iOS 26 EDM regression on U2) | Suggest reconnect; consider raising the timeout |
+
+```swift
+onDisconnect: { result in
+    switch result.disConnectType {
+    case .disconnectedDueToNoData:
+        // Never received any UWB sample for this device.
+        // Prompt the user to retry or check the device.
+        showNoDataAlert(for: result.deviceName)
+    case .disconnectedDueToTimeout:
+        showTimeoutToast(for: result.deviceName)
+    case .disconnectedDueToDistance, .disconnectedDueToSystem:
+        showStandardDisconnectToast(for: result.deviceName)
+    @unknown default:
+        showStandardDisconnectToast(for: result.deviceName)
+    }
+}
+```
+
+---
+
+## ⚠️ Memory Leak — Capture handlers with `[weak self]`
+
+The SDK retains the closures you pass to `startUWBRanging(onUpdate:onDisconnect:)`. If you capture `self` strongly inside those closures, your view controller / view model and the SDK will hold each other alive, and `deinit` will never fire. Always capture `self` weakly:
+
+```swift
+growSpaceSDK.startUWBRanging(
+    onUpdate: { [weak self] result in
+        guard let self else { return }
+        self.update(result)
+    },
+    onDisconnect: { [weak self] result in
+        guard let self else { return }
+        self.handleDisconnect(result)
+    }
+)
+```
+
+The SDK itself uses weak references for its internal `Timer` and delegate plumbing, so the cycle is purely on the caller side.
 
 ---
 
