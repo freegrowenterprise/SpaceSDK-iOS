@@ -27,6 +27,14 @@ https://github.com/freegrowenterprise/SpaceSDK-iOS
 
 ---
 
+## 🆕 What's New in 0.0.43
+
+- AR World View / camera-assistance is back as an **opt-in toggle**. Default is **off**, so existing integrations behave exactly like 0.0.42 with no camera prompt.
+- `startUWBRanging(..., isEnableARWorldView: Bool = false, ...)` — pass `true` at start time to bind each `NISession` to an `ARSession` and set `isCameraAssistanceEnabled = true`.
+- `setARWorldViewEnabled(_:)` — runtime toggle. **Active NI sessions are torn down and recreated** with the new setting; BLE connections stay, ranging briefly pauses, then resumes with new direction characteristics.
+- `isARWorldViewEnabled: Bool` — read-only accessor for the current state.
+- Camera permission (`NSCameraUsageDescription`) is **only required when the toggle is on**. Off path does not touch the camera or ARKit.
+
 ## 🆕 What's New in 0.0.42
 
 - `disconnectDevice(name)` — disconnect a single device while keeping the scanner running. Auto-reconnect is suppressed for the lifetime of the current `GrowSpaceSDK` instance.
@@ -69,7 +77,13 @@ https://github.com/freegrowenterprise/SpaceSDK-iOS
 <string>This app requires BLE permission to connect to UWB devices.</string>
 ```
 
-Camera permission is not required. SpaceSDK does not use ARKit, create an ARSession, or enable Nearby Interaction camera assistance.
+Camera permission is required **only if you opt into AR World View / camera assistance** (`isEnableARWorldView: true` or `setARWorldViewEnabled(true)`). For the default off path, ARKit is not loaded and the camera is not opened, so the key can be omitted.
+
+```xml
+<!-- Optional — only when AR World View / camera assistance is enabled -->
+<key>NSCameraUsageDescription</key>
+<string>UWB AR World View uses the camera to provide direction estimation via ARKit camera assistance.</string>
+```
 
 ---
 
@@ -87,6 +101,7 @@ growSpaceSDK.startUWBRanging(
     maximumConnectionCount: 4,
     replacementDistanceThreshold: 8,
     uwbUpdateTimeoutSeconds: 5,
+    isEnableARWorldView: false, // pass true to enable ARKit camera-assistance from the start
     onUpdate: { result in
         let name = result.deviceName
         let distance = result.distance
@@ -215,6 +230,35 @@ growSpaceSDK.startUWBRanging(
 ```
 
 The SDK itself uses weak references for its internal `Timer` and delegate plumbing, so the cycle is purely on the caller side.
+
+---
+
+## 🎥 AR World View / Camera Assistance Toggle
+
+`AR World View` is **off by default**. When on, each `NISession` is bound to a shared `ARSession` and `isCameraAssistanceEnabled = true`, which improves direction quality on devices that support camera assistance (notably U2 chips on iPhone 14+, where direction is otherwise unavailable).
+
+```swift
+// Start with AR off (default behavior — no camera prompt, no ARKit load)
+growSpaceSDK.startUWBRanging(
+    isEnableARWorldView: false,
+    onUpdate: { ... },
+    onDisconnect: { ... }
+)
+
+// Or start with AR enabled (caller must guarantee NSCameraUsageDescription is set)
+growSpaceSDK.startUWBRanging(
+    isEnableARWorldView: true,
+    onUpdate: { ... },
+    onDisconnect: { ... }
+)
+
+// Flip at runtime. Active NI sessions are stopped, invalidated, and recreated
+// with the new setting. BLE stays connected; ranging pauses briefly, then resumes.
+growSpaceSDK.setARWorldViewEnabled(true)
+print(growSpaceSDK.isARWorldViewEnabled) // true
+```
+
+**Permission note.** When you flip the toggle on, iOS will prompt for camera access on first use (if `NSCameraUsageDescription` is set). If the user denies, the camera stays dark, the AR view will not render, and direction quality will not improve. Your code should check `AVCaptureDevice.authorizationStatus(for: .video)` before flipping the toggle and guide the user to Settings if denied. UWB ranging itself continues to work without the camera; on U1 chips direction is still measured, on U2 chips direction will be unavailable.
 
 ---
 

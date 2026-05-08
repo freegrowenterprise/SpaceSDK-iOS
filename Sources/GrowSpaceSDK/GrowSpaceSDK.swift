@@ -16,11 +16,15 @@ public class GrowSpaceSDK {
 
     /// UWB 거리/방향 측정 결과 콜백.
     /// **호출자는 반드시 `[weak self]` 캡처를 사용해야 한다** (SDK ↔ 호출자 retain cycle 방지).
+    /// - Parameter isEnableARWorldView: AR/카메라 assistance 사용 여부. 기본값 false.
+    ///   true 일 때만 NI 세션이 ARSession 에 바인딩되고 isCameraAssistanceEnabled 가 true 로 설정된다.
+    ///   이 경우 호스트 앱 Info.plist 에 `NSCameraUsageDescription` 이 필요하다.
     public func startUWBRanging(
         maximumConnectionCount: Int = 4,
         replacementDistanceThreshold: Float = 8,
         isConnectStrongestSignalFirst: Bool = true,
         uwbUpdateTimeoutSeconds: Int = 5,
+        isEnableARWorldView: Bool = false,
         onUpdate: @escaping (UWBRangeResult) -> Void,
         onDisconnect: @escaping (UWBDisconnectResult) -> Void
     ) {
@@ -28,7 +32,8 @@ public class GrowSpaceSDK {
             maximumConnectionCount: maximumConnectionCount,
             replacementDistanceThreshold: replacementDistanceThreshold,
             isConnectStrongestSignalFirst: isConnectStrongestSignalFirst,
-            uwbUpdateTimeoutSeconds: uwbUpdateTimeoutSeconds)
+            uwbUpdateTimeoutSeconds: uwbUpdateTimeoutSeconds,
+            isEnableARWorldView: isEnableARWorldView)
 
         uwbScanner.spaceUWBHandler = { [weak self] result in
             guard let self else { return }
@@ -39,6 +44,21 @@ public class GrowSpaceSDK {
             guard let self else { return }
             onDisconnect(self.convertDisconnectType(result))
         }
+    }
+
+    // MARK: - AR World View Toggle
+
+    /// 런타임 중 AR/camera assistance 를 켜고 끈다.
+    /// UWB 가 동작 중이면 현재 살아있는 모든 NI 세션이 stop → invalidate → 새 설정으로 재시작된다.
+    /// (BLE 연결은 끊지 않는다; 디바이스에 stop / initialize 메시지가 다시 흐른다.)
+    /// - Parameter enabled: AR/camera assistance 사용 여부.
+    public func setARWorldViewEnabled(_ enabled: Bool) {
+        uwbScanner.setARWorldViewEnabled(enabled)
+    }
+
+    /// 현재 AR World View 가 켜져 있는지 여부.
+    public var isARWorldViewEnabled: Bool {
+        return uwbScanner.isARWorldViewEnabled
     }
 
     public func stopUWBRanging(onComplete: @escaping (Result<Void, Error>) -> Void) {

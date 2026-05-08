@@ -26,6 +26,16 @@ https://github.com/freegrowenterprise/SpaceSDK-iOS
 
 ---
 
+## 🆕 0.0.43 변경점
+
+- AR World View / camera assistance 가 **opt-in 토글**로 돌아왔다. 기본값은 **off** 라서 기존 통합 코드는 0.0.42 와 동일하게 카메라 프롬프트 없이 동작한다.
+- `startUWBRanging(..., isEnableARWorldView: Bool = false, ...)` — 시작 시점에 `true` 를 넘기면 각 `NISession` 이 `ARSession` 에 바인딩되고 `isCameraAssistanceEnabled = true` 로 설정된다.
+- `setARWorldViewEnabled(_:)` — 런타임 토글. **현재 살아있는 NI 세션을 stop → invalidate → 새 설정으로 재시작**한다. BLE 연결은 유지되며, ranging 만 잠깐 끊겼다 새 direction 특성으로 다시 흐른다.
+- `isARWorldViewEnabled: Bool` — 현재 상태 read-only 게터.
+- 카메라 권한 (`NSCameraUsageDescription`) 은 **토글이 켜져 있을 때만** 필요하다. off 경로는 카메라/ARKit 을 건드리지 않는다.
+
+---
+
 ## 🆕 0.0.42 변경점
 
 - `disconnectDevice(name)` — 스캐너는 그대로 두고 특정 디바이스 1개만 끊는다. 같은 `GrowSpaceSDK` 인스턴스 동안엔 자동 재연결을 막고, 새 인스턴스/새 화면에선 다시 연결될 수 있다.
@@ -68,7 +78,13 @@ https://github.com/freegrowenterprise/SpaceSDK-iOS
 <string>UWB 장치와의 BLE 연결을 위해 이 권한이 필요합니다.</string>
 ```
 
-카메라 권한은 필요하지 않습니다. SpaceSDK는 ARKit을 사용하지 않고, ARSession을 생성하지 않으며, Nearby Interaction camera assistance를 켜지 않습니다.
+카메라 권한은 **AR World View / camera assistance 를 opt-in 한 경우에만** 필요합니다 (`isEnableARWorldView: true` 또는 `setARWorldViewEnabled(true)`). 기본 off 경로는 ARKit 을 로드하지도, 카메라를 열지도 않으므로 키를 생략해도 됩니다.
+
+```xml
+<!-- 선택 사항 — AR World View / camera assistance 를 켤 때만 필요 -->
+<key>NSCameraUsageDescription</key>
+<string>UWB AR World View 가 ARKit camera assistance 로 방향 측정을 보조합니다.</string>
+```
 
 ---
 
@@ -85,6 +101,7 @@ let growSpaceSDK = GrowSpaceSDK()
 growSpaceSDK.startUWBRanging(
     maximumConnectionCount: 4,
     replacementDistanceThreshold: 8,
+    isEnableARWorldView: false, // true 면 시작 시점부터 ARKit camera assistance 사용
     onUpdate: { result in
         let name = result.deviceName
         let distance = result.distance
@@ -108,6 +125,35 @@ growSpaceSDK.startUWBRanging(
     }
 )
 ```
+
+---
+
+## 🎥 AR World View / Camera Assistance 토글
+
+`AR World View` 는 **기본 off**. 켜면 각 `NISession` 이 공유 `ARSession` 에 바인딩되고 `isCameraAssistanceEnabled = true` 가 적용된다 — camera assistance 를 지원하는 단말(특히 iPhone 14+ U2 칩, 카메라 없이 direction 미측정)에서 방향 정확도가 향상된다.
+
+```swift
+// 기본 — 카메라/ARKit 미사용 (권한 프롬프트도 뜨지 않음)
+growSpaceSDK.startUWBRanging(
+    isEnableARWorldView: false,
+    onUpdate: { ... },
+    onDisconnect: { ... }
+)
+
+// 시작 시점부터 AR ON (호출자는 NSCameraUsageDescription 보장)
+growSpaceSDK.startUWBRanging(
+    isEnableARWorldView: true,
+    onUpdate: { ... },
+    onDisconnect: { ... }
+)
+
+// 런타임 토글. 살아있는 NI 세션을 stop / invalidate / 새 설정으로 재시작.
+// BLE 연결은 끊지 않음; ranging 만 잠깐 끊겼다 다시 흐른다.
+growSpaceSDK.setARWorldViewEnabled(true)
+print(growSpaceSDK.isARWorldViewEnabled) // true
+```
+
+**권한 안내.** 토글 ON 시점에 iOS 가 자동으로 카메라 권한 다이얼로그를 띄운다(`NSCameraUsageDescription` 가 있을 때). 사용자가 거부하면 카메라가 켜지지 않고 AR 뷰는 검정 상태, 방향 정확도 향상도 없다. 호출자는 토글을 켜기 전에 `AVCaptureDevice.authorizationStatus(for: .video)` 로 사전 확인하고, 거부 상태면 사용자를 설정 앱으로 안내해야 한다. UWB ranging 자체는 카메라 없이도 계속 동작 — U1 칩은 방향이 그대로 측정되고, U2 칩에서는 방향이 비어 있다.
 
 ---
 
